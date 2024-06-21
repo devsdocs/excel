@@ -2,13 +2,11 @@ part of excel;
 
 class Save {
   final Excel _excel;
-  late Map<String, ArchiveFile> _archiveFiles;
-  late List<CellStyle> _innerCellStyle;
+  final Map<String, ArchiveFile> _archiveFiles = {};
+  final List<CellStyle> _innerCellStyle = [];
   final Parser parser;
-  Save._(this._excel, this.parser) {
-    _archiveFiles = <String, ArchiveFile>{};
-    _innerCellStyle = <CellStyle>[];
-  }
+
+  Save._(this._excel, this.parser);
 
   void _addNewColumn(XmlElement columns, int min, int max, double width) {
     columns.children.add(XmlElement(XmlName('col'), [
@@ -172,7 +170,7 @@ class Save {
   /// Writing Font Color in [xl/styles.xml] from the Cells of the sheets.
 
   void _processStylesFile() {
-    _innerCellStyle = <CellStyle>[];
+    _innerCellStyle.clear();
     List<String> innerPatternFill = <String>[];
     List<_FontStyle> innerFontStyle = <_FontStyle>[];
     List<_BorderSet> innerBorderSet = <_BorderSet>[];
@@ -497,7 +495,14 @@ class Save {
       int count;
       if (numFmtsElement == null) {
         numFmtsElement = XmlElement(XmlName('numFmts'));
-        styleSheet.children.insert(0, numFmtsElement);
+
+        ///FIX: if no default numFormats were added in styles.xml - customNumFormats were added in wrong place,
+        styleSheet
+            .findElements('styleSheet')
+            .first
+            .children
+            .insert(0, numFmtsElement);
+        // styleSheet.children.insert(0, numFmtsElement);
       }
       count = int.parse(numFmtsElement.getAttribute('count') ?? '0');
 
