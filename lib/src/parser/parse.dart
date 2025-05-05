@@ -318,13 +318,10 @@ class Parser {
         node1.findAllElements('numFmt').forEach((node) {
           final numFmtId = int.parse(node.getAttribute('numFmtId')!);
           final formatCode = node.getAttribute('formatCode')!;
-          if (numFmtId < 164) {
-            throw Exception(
-                'custom numFmtId starts at 164 but found a value of $numFmtId');
+          if (numFmtId >= 164) {
+            _excel._numFormats
+                .add(numFmtId, NumFormat.custom(formatCode: formatCode));
           }
-
-          _excel._numFormats
-              .add(numFmtId, NumFormat.custom(formatCode: formatCode));
         });
       });
 
@@ -610,7 +607,7 @@ class Parser {
       case 's':
         final sharedString = _excel._sharedStrings
             .value(int.parse(_parseValue(node.findElements('v').first)));
-        value = TextCellValue(sharedString!.stringValue);
+        value = TextCellValue.span(sharedString!.textSpan);
         break;
       // boolean
       case 'b':

@@ -63,6 +63,10 @@ void main() {
       excel.tables['Tabelle1']?.rows[10][1]?.value,
       equals(DoubleCellValue(0.05)),
     );
+    expect(
+      excel.tables['Tabelle1']?.rows[11][1]?.value,
+      equals(TimeCellValue(hour: 2, minute: 20, second: 10)),
+    );
   });
 
   test('Cell Data-Types from Google Spreadsheet', () {
@@ -253,6 +257,7 @@ void main() {
       );
     }
   });
+
   test('Testing customNumFormats', () {
     var excel = Excel.createExcel();
     var sheet = excel['Sheet1'];
@@ -279,6 +284,7 @@ void main() {
     expect(b1_2.cellStyle?.numberFormat, equals(format2));
     expect(b1_2.value, equals(DoubleCellValue(123456.789)));
   });
+
   group('Sheet Operations', () {
     var file = './test/test_resources/example.xlsx';
     var bytes = File(file).readAsBytesSync();
@@ -823,6 +829,36 @@ void main() {
     });
   });
 
+  group('Cell Style', () {
+    test('read file with rich text', () {
+      final file = './test/test_resources/richText.xlsx';
+      final bytes = File(file).readAsBytesSync();
+      final excel = Excel.decodeBytes(bytes);
+      final Sheet sheetObject = excel.tables['Sheet1']!;
+      final redHex = 'FFFF0000';
+      final blueHex = 'FF2A6099';
+
+      final cellA1 = sheetObject.cell(CellIndex.indexByString('A1')).value
+          as TextCellValue;
+      expect(cellA1.value.children![0].style!.fontSize, 12);
+      expect(cellA1.value.children![0].style!.fontColor.colorHex, redHex);
+      expect(cellA1.value.children![1].style!.fontSize, 10);
+      expect(cellA1.value.children![1].style!.fontColor.colorHex, blueHex);
+
+      final cellA2 = sheetObject.cell(CellIndex.indexByString('A2')).value
+          as TextCellValue;
+      expect(cellA2.value.children![0].style!.isBold, true);
+      expect(cellA2.value.children![0].style!.isItalic, false);
+      expect(cellA2.value.children![1].style!.isBold, false);
+      expect(cellA2.value.children![1].style!.isItalic, true);
+
+      final cellA3 = sheetObject.cell(CellIndex.indexByString('A3')).value
+          as TextCellValue;
+      expect(cellA3.value.children![0].style!.fontFamily, "Skia");
+      expect(cellA3.value.children![1].style!.fontFamily, "Arial");
+    });
+  });
+
   group('rPh tag', () {
     test('Read Cell shared text without rPh elements', () {
       var file = './test/test_resources/rphSample.xlsx';
@@ -1051,5 +1087,18 @@ void main() {
     // should 40 with a litle bit of tolerance.
     expect(sheetObject.getRowHeight(1), greaterThan(38));
     expect(sheetObject.getRowHeight(1), lessThan(42));
+  });
+
+  test('Decode customNumFmtIdBelow164.xlsx without throwing exception', () {
+    var file = './test/test_resources/customNumFmtIdBelow164.xlsx';
+
+    expect(
+      () {
+        final bytes = File(file).readAsBytesSync();
+        final _ = Excel.decodeBytes(bytes);
+      },
+      returnsNormally,
+      reason: 'Decoding the file should not throw any exception',
+    );
   });
 }
